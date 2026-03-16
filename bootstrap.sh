@@ -100,13 +100,14 @@ sudo mkdir -p /opt/duke-and-duke
 sudo chown "$USER:$USER" /opt/duke-and-duke
 
 if [ -d "$REPO_DIR/.git" ]; then
-    info "Repo already cloned at $REPO_DIR — pulling latest..."
-    # Temporarily grant write access so glados can pull
+    info "Repo already cloned at $REPO_DIR — syncing to latest..."
+    # Temporarily grant write access so glados can update
     sudo chown -R "$USER:$USER" "$REPO_DIR"
     cd "$REPO_DIR"
     git remote set-url origin "$CLONE_URL"
-    git pull --ff-only
-    success "Repo updated"
+    git fetch origin
+    git reset --hard origin/main
+    success "Repo synced (local changes discarded, matches GitHub)"
 else
     info "Cloning repo to $REPO_DIR ..."
     sudo mkdir -p "$REPO_DIR"
@@ -119,12 +120,16 @@ fi
 git -C "$REPO_DIR" config credential.helper store
 git -C "$REPO_DIR" remote set-url origin "$CLONE_URL"
 
-# Lock back down — dukeduke owns the repo at runtime
-# glados retains group access for git operations
-sudo chown -R dukeduke:dukeduke "$REPO_DIR"
-sudo usermod -aG dukeduke "$USER" 2>/dev/null || true
-sudo chmod -R g+rw "$REPO_DIR"
-success "Repo ownership set to dukeduke (glados has group access)"
+# Lock down to dukeduke if the service account already exists
+# (created by prereqs.sh Phase 2A -- skip on first bootstrap run)
+if id dukeduke &>/dev/null; then
+    sudo chown -R dukeduke:dukeduke "$REPO_DIR"
+    sudo usermod -aG dukeduke "$USER" 2>/dev/null || true
+    sudo chmod -R g+rw "$REPO_DIR"
+    success "Repo ownership set to dukeduke (glados has group access)"
+else
+    success "Repo ready (dukeduke not yet created -- prereqs.sh will set ownership)"
+fi
 
 # ── Make scripts executable ───────────────────────────────────────────────────
 chmod +x "$REPO_DIR/deploy.sh"
