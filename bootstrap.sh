@@ -35,7 +35,7 @@ fi
 
 echo ""
 echo -e "${GREEN}╔══════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║   Duke & Duke  v2.0  --  Bootstrap                          ║${NC}"
+echo -e "${GREEN}║   Duke & Duke  v3  --  Bootstrap                            ║${NC}"
 echo -e "${GREEN}╚══════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
