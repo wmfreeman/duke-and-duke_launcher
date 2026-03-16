@@ -101,12 +101,16 @@ sudo chown "$USER:$USER" /opt/duke-and-duke
 
 if [ -d "$REPO_DIR/.git" ]; then
     info "Repo already cloned at $REPO_DIR — pulling latest..."
+    # Temporarily grant write access so glados can pull
+    sudo chown -R "$USER:$USER" "$REPO_DIR"
     cd "$REPO_DIR"
     git remote set-url origin "$CLONE_URL"
     git pull --ff-only
     success "Repo updated"
 else
     info "Cloning repo to $REPO_DIR ..."
+    sudo mkdir -p "$REPO_DIR"
+    sudo chown "$USER:$USER" "$REPO_DIR"
     git clone "$CLONE_URL" "$REPO_DIR"
     success "Repo cloned: $REPO_DIR"
 fi
@@ -114,6 +118,13 @@ fi
 # Store credentials for future git pulls
 git -C "$REPO_DIR" config credential.helper store
 git -C "$REPO_DIR" remote set-url origin "$CLONE_URL"
+
+# Lock back down — dukeduke owns the repo at runtime
+# glados retains group access for git operations
+sudo chown -R dukeduke:dukeduke "$REPO_DIR"
+sudo usermod -aG dukeduke "$USER" 2>/dev/null || true
+sudo chmod -R g+rw "$REPO_DIR"
+success "Repo ownership set to dukeduke (glados has group access)"
 
 # ── Make scripts executable ───────────────────────────────────────────────────
 chmod +x "$REPO_DIR/deploy.sh"
