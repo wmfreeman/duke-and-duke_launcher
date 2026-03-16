@@ -99,10 +99,13 @@ CLONE_URL="${GITHUB_REPO/https:\/\//https://${GITHUB_USER}:${GITHUB_TOKEN}@}"
 sudo mkdir -p /opt/duke-and-duke
 sudo chown "$USER:$USER" /opt/duke-and-duke
 
+# Always take ownership temporarily for git operations,
+# regardless of who currently owns the directory.
+sudo mkdir -p "$REPO_DIR"
+sudo chown -R "$USER:$USER" "$REPO_DIR"
+
 if [ -d "$REPO_DIR/.git" ]; then
     info "Repo already cloned at $REPO_DIR — syncing to latest..."
-    # Temporarily grant write access so glados can update
-    sudo chown -R "$USER:$USER" "$REPO_DIR"
     cd "$REPO_DIR"
     git remote set-url origin "$CLONE_URL"
     git fetch origin
@@ -110,8 +113,6 @@ if [ -d "$REPO_DIR/.git" ]; then
     success "Repo synced (local changes discarded, matches GitHub)"
 else
     info "Cloning repo to $REPO_DIR ..."
-    sudo mkdir -p "$REPO_DIR"
-    sudo chown "$USER:$USER" "$REPO_DIR"
     git clone "$CLONE_URL" "$REPO_DIR"
     success "Repo cloned: $REPO_DIR"
 fi
