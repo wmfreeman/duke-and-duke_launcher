@@ -117,6 +117,11 @@ else
     success "Repo cloned: $REPO_DIR"
 fi
 
+# Restore execute permissions (git does not preserve them reliably)
+chmod +x "$REPO_DIR/deploy.sh"
+chmod +x "$REPO_DIR/setup/"*.sh 2>/dev/null || true
+success "Script permissions restored"
+
 # Store credentials for future git pulls
 git -C "$REPO_DIR" config credential.helper store
 git -C "$REPO_DIR" remote set-url origin "$CLONE_URL"
